@@ -114,6 +114,22 @@ void AShooterWeapon::StartFiring()
 	}
 }
 
+void AShooterWeapon::SecondaryFire()
+{
+	if (!bIsFiring)
+	{
+		bIsFiring = true;
+		SecondaryFireAction();
+	}
+	bIsFiring = false;
+}
+
+void AShooterWeapon::SecondaryFireAction()
+{
+	FireSecondaryProjectile(WeaponOwner->GetWeaponTargetLocation());
+	
+}
+
 void AShooterWeapon::StopFiring()
 {
 	// lower the firing flag
@@ -172,6 +188,39 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 	SpawnParams.Instigator = PawnOwner;
 
 	AShooterProjectile* Projectile = GetWorld()->SpawnActor<AShooterProjectile>(ProjectileClass, ProjectileTransform, SpawnParams);
+
+	// play the firing montage
+	WeaponOwner->PlayFiringMontage(FiringMontage);
+
+	// add recoil
+	WeaponOwner->AddWeaponRecoil(FiringRecoil);
+
+	// consume bullets
+	--CurrentBullets;
+
+	// if the clip is depleted, reload it
+	if (CurrentBullets <= 0)
+	{
+		CurrentBullets = MagazineSize;
+	}
+
+	// update the weapon HUD
+	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
+}
+
+void AShooterWeapon::FireSecondaryProjectile(const FVector& TargetLocation)
+{
+	// get the projectile transform
+	FTransform ProjectileTransform = CalculateProjectileSpawnTransform(TargetLocation);
+	
+	// spawn the projectile
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.TransformScaleMethod = ESpawnActorScaleMethod::OverrideRootScale;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.Instigator = PawnOwner;
+
+	AShooterProjectile* Projectile = GetWorld()->SpawnActor<AShooterProjectile>(SecondaryProjectileClass, ProjectileTransform, SpawnParams);
 
 	// play the firing montage
 	WeaponOwner->PlayFiringMontage(FiringMontage);

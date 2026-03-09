@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Ammo")
 	TSubclassOf<AShooterProjectile> ProjectileClass;
 
+	UPROPERTY(EditAnywhere, Category="Ammo")
+	TSubclassOf<AShooterProjectile> SecondaryProjectileClass;
+
 	/** Number of bullets in a magazine */
 	UPROPERTY(EditAnywhere, Category="Ammo", meta = (ClampMin = 0, ClampMax = 100))
 	int32 MagazineSize = 10;
@@ -142,6 +145,9 @@ public:
 	/** Stop firing this weapon */
 	void StopFiring();
 
+	void SecondaryFire();
+	void SecondaryFireAction();
+
 protected:
 
 	/** Fire the weapon */
@@ -152,6 +158,7 @@ protected:
 
 	/** Fire a projectile towards the target location */
 	virtual void FireProjectile(const FVector& TargetLocation);
+	virtual void FireSecondaryProjectile(const FVector& TargetLocation);
 
 	/** Calculates the spawn transform for projectiles shot by this weapon */
 	FTransform CalculateProjectileSpawnTransform(const FVector& TargetLocation) const;
