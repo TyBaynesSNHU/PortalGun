@@ -52,7 +52,7 @@ void APortal::BeginPlay()
     NotifyPartner();
     UpdateClipPlane();
 
-    // ADD THIS: Force another clear after partner assignment if still no partner
+    
     if (!PartnerPortal && PortalRenderTarget)
     {
         UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), PortalRenderTarget, FLinearColor::Black);
@@ -91,24 +91,23 @@ void APortal::Tick(float DeltaTime)
 
         FVector ActorVelocity = Actor->GetVelocity();
 
-		//Prioritize ProjectileMovementComponent velocity if it exists so projectiles actually register as moving
-		//Projectiles were missing teleportation by slipping in between frames/ticks
-        if (UProjectileMovementComponent* ProjComp = Actor->FindComponentByClass<UProjectileMovementComponent>())
-        {
-            ActorVelocity = ProjComp->Velocity;
-        }
 
         float DotVelocity = FVector::DotProduct(ActorVelocity, GetActorForwardVector());
 
-        // Logic: Behind the plane AND moving into the portal
-        if (DotPosition < 0.0f && DotVelocity < 0.0f)
-        {
-            TeleportActor(Actor);
+		bool bIsProjectile =( Actor->FindComponentByClass<UProjectileMovementComponent>() != nullptr);
 
-            // Final safety: Ensure the index wasn't removed by TeleportActor's movement
-            if (OverlappingActors.IsValidIndex(i))
+        if (!bIsProjectile)
+        {
+            // Logic: Behind the plane AND moving into the portal
+            if (DotPosition < 50.f && DotVelocity < 0.0f)
             {
-                OverlappingActors.RemoveAt(i);
+                TeleportActor(Actor);
+
+                // Final safety: Ensure the index wasn't removed by TeleportActor's movement
+                if (OverlappingActors.IsValidIndex(i))
+                {
+                    OverlappingActors.RemoveAt(i);
+                }
             }
         }
     }
@@ -173,6 +172,13 @@ void APortal::TeleportActor(AActor* ActorToTeleport)
     // Calculate new location and rotation
     FVector NewLocation = ConvertLocationToPartner(ActorToTeleport->GetActorLocation());
     FRotator NewRotation = ConvertRotationToPartner(ActorToTeleport->GetActorRotation());
+
+	//Adding offset exclusively for projectiles to prevent them from colliding with the portal surface and getting stuck in an infinite teleport loop
+    if (ActorToTeleport->FindComponentByClass<UProjectileMovementComponent>())
+    {
+        float ProjectileOffset = 50.f;
+		NewLocation += PartnerPortal->GetActorForwardVector() * ProjectileOffset;
+    }
 
     // Calculate new velocity
     FVector Velocity = FVector::ZeroVector;

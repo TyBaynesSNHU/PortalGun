@@ -52,7 +52,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Firing
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AShooterCharacter::DoStartFiring);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AShooterCharacter::DoStopFiring);
-		EnhancedInputComponent->BindAction(SecondaryFireAction, ETriggerEvent::Started, this, &AShooterCharacter::DoSecondaryFire);
+		EnhancedInputComponent->BindAction(SecondaryFireAction, ETriggerEvent::Triggered, this, &AShooterCharacter::DoSecondaryFire);
 
 		// Switch weapon
 		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &AShooterCharacter::DoSwitchWeapon);
